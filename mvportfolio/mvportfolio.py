@@ -54,10 +54,7 @@ class MVPPortfolio:
         self.nos = len(symbols)
         self.start = start
         self.end = end
-        if weights is None:
-            self.weights = self.nos * [1 / self.nos]
-        else:
-            self.weights = weights
+        self.weights = self.nos * [1 / self.nos] if weights is None else weights
         if source is None:
             self.source = 'http://hilpisch.com/pyalgo_eikon_eod_data.csv'
         self.logger = logger
@@ -75,14 +72,13 @@ class MVPPortfolio:
         try:
             self.data = self.raw[self.symbols]
         except:
-            logging.error('Symbol(s) not in data source: %s' % (self.symbols))
+            logging.error(f'Symbol(s) not in data source: {self.symbols}')
             raise ValueError('Symbol(s) not in data source.')
         try:
             self.data = self.data[(self.data.index >= self.start) & (
                 self.data.index <= self.end)]
         except:
-            logging.error('Dates not compatible: %s | %s' %
-                          (self.start, self.end))
+            logging.error(f'Dates not compatible: {self.start} | {self.end}')
             raise ValueError('Dates not compatible with data source.')
         self.data.dropna(inplace=True)
         self.returns = np.log(self.data / self.data.shift(1))
@@ -149,9 +145,12 @@ class MVPPortfolio:
             self.prepare_data()
         constraints = ({'type': 'eq', 'fun': lambda w: np.sum(w) - 1})
         bounds = self.nos * [(0, 1)]
-        opt = sco.minimize(self.portfolio_volatility, self.weights,
-                           bounds=bounds, constraints=constraints)
-        return opt
+        return sco.minimize(
+            self.portfolio_volatility,
+            self.weights,
+            bounds=bounds,
+            constraints=constraints,
+        )
 
 
 if __name__ == '__main__':
